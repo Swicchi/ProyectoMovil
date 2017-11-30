@@ -2,4 +2,12 @@
     <string name="app_name">Sistema Restaunte</string>
     <string name="content">Para Solicitar Orden Escaneé el código sobre la mesa</string>
     <string name="scan_btn">Escanear Código QR</string>
+    <string name="headerMenus">Listado de menus</string>
+    <string name="title_activity_main3">Main3Activity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_view_cart">ViewCart</string>
 </resources>
