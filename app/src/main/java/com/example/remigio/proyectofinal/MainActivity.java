@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -28,6 +30,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     private Button scan_btn;
@@ -60,6 +64,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    public Boolean isOnlineNet() {
+
+        try {
+            Process p = java.lang.Runtime.getRuntime().exec("ping -c 1 www.google.es");
+
+            int val           = p.waitFor();
+            boolean reachable = (val == 0);
+            return reachable;
+
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return false;
+    }
+    private boolean isNetDisponible() {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo actNetInfo = connectivityManager.getActiveNetworkInfo();
+
+        return (actNetInfo != null && actNetInfo.isConnected());
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -72,8 +100,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(context, "Se ingresado el codigo",Toast.LENGTH_SHORT).show();
                 resulta = result.getContents();
                 GET = GET+"?codigo="+resulta;
-                hiloconexion = new ObtenerWebServiceMesa();
-                hiloconexion.execute(GET);
+                if(isNetDisponible()&&isOnlineNet()) {
+                    hiloconexion = new ObtenerWebServiceMesa();
+                    hiloconexion.execute(GET);
+                }else{
+                    Toast.makeText(context, "Se ha detectado problemas en la conexión",Toast.LENGTH_SHORT).show();
+                }
             }
         }
         else {
@@ -87,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             if (s){
                 startActivity(intent);
             }else{
-                Toast.makeText(context, "No se encontro Mesa para código: "+resulta+", Reinicie la aplicación", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "No se encontro Mesa para el código, Reinicie la aplicación", Toast.LENGTH_LONG).show();
             }
         }
 

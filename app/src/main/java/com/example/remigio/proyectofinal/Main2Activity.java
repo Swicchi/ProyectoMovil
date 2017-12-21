@@ -8,6 +8,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -34,11 +36,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import android.os.Handler;
 
 public class Main2Activity extends AppCompatActivity {
     //TextView textView;
     private ListView listView;
-    TextView monto;
+    static TextView monto;
     View viewmenu;
     int posicionmenu;
     static Orden orden;
@@ -67,14 +70,23 @@ public class Main2Activity extends AppCompatActivity {
         monto = (TextView) findViewById(R.id.monto);
         monto.setText("Mesa: "+numeroMesa+", Monto total= $0");
         orden = new Orden(numeroMesa);
-
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                finish();
+            }
+            }, 10800000);
         Log.d("M","Progress");
         context = this;
         listView = (ListView) findViewById(R.id.listView);
         mProgressView = findViewById(R.id.login_progress);
         showProgress(true);
+        if(isNetDisponible()&&isOnlineNet()) {
         hiloconexion = new ObtenerWebService();
         hiloconexion.execute(GET);
+        }else{
+            Toast.makeText(context, "Se ha detectado problemas en la conexión",Toast.LENGTH_SHORT).show();
+        }
         Log.d("cant2",menus.length+"");
 
         if (bundle != null) {
@@ -104,8 +116,7 @@ public class Main2Activity extends AppCompatActivity {
                         orden.addToCart(menu);
                         monto.setText("Mesa: "+(int)orden.getMesa()+", Monto Total= $"+(int)orden.getValue());
                         Toast.makeText(getApplicationContext(),"Se agrego 1: "+menu.nombre, Toast.LENGTH_SHORT).show();
-                        TextView v = (TextView) viewmenu.findViewById(R.id.nombre);
-                        //Toast.makeText(getApplicationContext(), v.getText(), Toast.LENGTH_SHORT).show();
+
                     }
                 });
                 alerta.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -118,6 +129,30 @@ public class Main2Activity extends AppCompatActivity {
 
             }
         });
+    }
+    public Boolean isOnlineNet() {
+
+        try {
+            Process p = java.lang.Runtime.getRuntime().exec("ping -c 1 www.google.es");
+
+            int val           = p.waitFor();
+            boolean reachable = (val == 0);
+            return reachable;
+
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return false;
+    }
+    private boolean isNetDisponible() {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo actNetInfo = connectivityManager.getActiveNetworkInfo();
+
+        return (actNetInfo != null && actNetInfo.isConnected());
     }
     public void reset(View view){
         AlertDialog.Builder alerta = new AlertDialog.Builder(context);
@@ -144,7 +179,6 @@ public class Main2Activity extends AppCompatActivity {
     public void verorden(View view){
         if(orden.getSize()>0) {
             Intent intent = new Intent(this, ViewCart.class);
-            orden = orden;
             startActivity(intent);
         }else {
             Toast.makeText(getApplicationContext(),"Orden Vacia", Toast.LENGTH_SHORT).show();

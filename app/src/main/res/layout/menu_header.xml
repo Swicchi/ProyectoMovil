@@ -5,8 +5,9 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textSize="20dp"
         android:text="@string/headerMenus"
-        android:background="#236562"
+        android:background="#0000CD"
         android:textColor="#FFFFFF"
         android:gravity="center_horizontal"/>
 </LinearLayout>

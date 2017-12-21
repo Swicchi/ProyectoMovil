@@ -11,18 +11,28 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
 import android.content.Intent;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,45 +49,128 @@ public class ViewCart extends AppCompatActivity
     String INSERT_ORDEN = IP + "/registrar_orden.php";
     String INSERT_PRODUCTO = IP + "/registrar_producto.php";
     String INSERT_BEBIDA= IP + "/registrar_bebida.php";
+    View viewmenu;
+    int posicionmenu;
+    int i;
+    int cont = 1;
     URL url;
+    View header;
     Intent intent;
     Context context;
     String mensaje = "";
+    private View mProgressView;
+    private ListView listView;
+    TextView titulo2;
     ObtenerWebServiceOrden hiloconexionOrden;
     ObtenerWebServiceProducto hiloconexionProducto;
     Orden cart = Main2Activity.orden;
+    TextView monto = Main2Activity.monto;
+    Menu[] menus ;
     protected void onCreate(Bundle savedInstanceState)
     {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                finish();
+            }
+        }, 7200000);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_view_cart);
-        LinearLayout cartLayout = (LinearLayout) findViewById(R.id.cart);
         TextView titulo = (TextView) findViewById(R.id.title);
-        titulo.setText("Orden de Compra, Mesa "+(int)cart.getMesa()+", Monto Total: $"+(int)cart.getValue());
+        titulo.setText("Orden de Compra, Mesa "+(int)cart.getMesa());
+        titulo2 = (TextView) findViewById(R.id.title2);
+        titulo2.setText("Monto Total: $"+(int)cart.getValue());
         context = this;
+        listView = (ListView) findViewById(R.id.listView);
+        listar();
+
+    }
+    public Boolean isOnlineNet() {
+
+        try {
+            Process p = java.lang.Runtime.getRuntime().exec("ping -c 1 www.google.es");
+
+            int val           = p.waitFor();
+            boolean reachable = (val == 0);
+            return reachable;
+
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return false;
+    }
+    private boolean isNetDisponible() {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo actNetInfo = connectivityManager.getActiveNetworkInfo();
+
+        return (actNetInfo != null && actNetInfo.isConnected());
+    }
+    private void listar(){
+        menus = new Menu[cart.getSize()];
         Set<Menu> products = cart.getProducts();
+        Log.d("sizecart",cart.getSize()+"");
         MenuOrden[] menuOrdens =new MenuOrden [cart.getSize()];
+        Log.d("size",menuOrdens.length+"");
         Iterator iterator = products.iterator();
-        int i =0;
-        ListView listView = (ListView) findViewById(R.id.listView);
+        i =0;
         while(iterator.hasNext())
         {
             Menu menu = (Menu) iterator.next();
+            menus[i]= menu;
             menuOrdens[i] = new MenuOrden(menu.getPrecio(),cart.getQuantity(menu),menu.getNombre());
-
             i++;
         }
         MenuOrdenAdapter adapter = new MenuOrdenAdapter(this, R.layout.menuorden_row, menuOrdens);
-        View header = (View) getLayoutInflater().inflate(R.layout.menuorden_header, null);
+        header = (View) getLayoutInflater().inflate(R.layout.menuorden_header, null);
         listView.addHeaderView(header);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                viewmenu = view;
+                posicionmenu=i;
+                AlertDialog.Builder alerta = new AlertDialog.Builder(context);
+                alerta.setMessage("¿Esta segura/o de quitar producto?");
+                alerta.setTitle("Sistema de Restaurante");
+                alerta.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Menu menuOrden = menus[posicionmenu-1];
+                        cart.removeToCart(menuOrden);
+                        titulo2.setText("Monto Total: $"+(int)cart.getValue());
+                        monto.setText("Mesa: "+(int)cart.getMesa()+", Monto total= $"+(int)cart.getValue());
+                        listView.removeHeaderView(header);
+                        Toast.makeText(getApplicationContext(),"Se quito 1: "+menuOrden.nombre, Toast.LENGTH_SHORT).show();
+                        listar();
+                    }
+                });
+                alerta.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(getApplicationContext(),"Se cancelo la acción", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                alerta.show();
+
+            }
+        });
     }
     public void solicitar(View view) {
+        if(cart.getSize()>0) {
+            if(isNetDisponible()&&isOnlineNet()) {
         AlertDialog.Builder alerta = new AlertDialog.Builder(context);
         alerta.setMessage("¿Esta segura/o de realizar la acción?");
         alerta.setTitle("Sistema de Restaurante");
         alerta.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                listView = (ListView) findViewById(R.id.listView);
+                mProgressView = findViewById(R.id.login_progress);
+                showProgress(true);
                 hiloconexionOrden = new ObtenerWebServiceOrden();
                 hiloconexionOrden.execute(INSERT_ORDEN, Double.toString(cart.getMesa()));
             }
@@ -89,7 +182,45 @@ public class ViewCart extends AppCompatActivity
             }
         });
         alerta.show();
+            }else{
+                Toast.makeText(context, "Se ha detectado problemas en la conexión",Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getApplicationContext(),"Orden Vacia", Toast.LENGTH_SHORT).show();
+        }
     }
+
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            listView.setVisibility(show ? View.GONE : View.VISIBLE);
+            listView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    listView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            listView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+    }
+
     public class ObtenerWebServiceOrden extends AsyncTask<String, Void, String> {
         @Override
         protected void onPostExecute(String s) {
@@ -102,7 +233,6 @@ public class ViewCart extends AppCompatActivity
                 while (iterator.hasNext()) {
                     Menu menu = (Menu) iterator.next();
                     hiloconexionProducto = new ObtenerWebServiceProducto();
-
                     String tipo = "Tipo: Bebestible";
                     String tipo2 = menu.getTipo();
                     Log.d("tipo",tipo+" "+tipo2);
@@ -112,6 +242,7 @@ public class ViewCart extends AppCompatActivity
                         hiloconexionProducto.execute(INSERT_PRODUCTO, Integer.toString(menu.getId()), s, Integer.toString(cart.getQuantity(menu)), menu.getTipo());
                     }
                 }
+                showProgress(false);
             }
         }
 
@@ -200,7 +331,17 @@ public class ViewCart extends AppCompatActivity
         protected void onPostExecute(Boolean s) {
             //super.onPostExecute(s);
             if(s){
-                Toast.makeText(context, "Se Registro Producto",Toast.LENGTH_SHORT).show();
+                if(cont==cart.getSize()){
+                    Toast.makeText(context, "Se Registro Orden",Toast.LENGTH_SHORT).show();
+                    cont=0;
+                    /*
+                    cart.empty();
+                    monto.setText("Mesa: "+(int)cart.getMesa()+", Monto total= $"+(int)cart.getValue());
+                    listView.removeHeaderView(header);
+                    titulo2.setText("Monto Total: $"+(int)cart.getValue());
+                    listar();*/
+                }
+                cont++;
             }else{
                 Toast.makeText(context, mensaje,Toast.LENGTH_SHORT).show();
             }

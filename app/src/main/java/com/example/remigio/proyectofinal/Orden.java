@@ -22,10 +22,22 @@ public class Orden {
     {
         if(orden.containsKey(menu))
             orden.put(menu, orden.get(menu) + 1);
+
         else
             orden.put(menu, 1);
 
         m_value += menu.getPrecio();
+
+    }
+    void removeToCart(Menu menu){
+        if(orden.containsKey(menu)){
+            if(orden.get(menu)==1) {
+                orden.remove(menu);
+            }else if(orden.get(menu)>1){
+                orden.put(menu, orden.get(menu) - 1);
+            }
+        }
+        m_value -= menu.getPrecio();
     }
 
     int getQuantity(Menu menu)

@@ -9,7 +9,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:background="#236562"
+        android:textSize="20dp"
+        android:background="#0000CD"
         android:text="Nombre"
         android:textColor="#FFFFFF" />
     <TextView
@@ -18,9 +19,10 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="230dp"
-        android:layout_marginStart="230dp"
-        android:background="#236562"
+        android:layout_marginLeft="195dp"
+        android:textSize="20dp"
+        android:layout_marginStart="195dp"
+        android:background="#0000CD"
         android:text="Cantidad"
         android:textColor="#FFFFFF" />
     <TextView
@@ -28,10 +30,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:textSize="20dp"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="293dp"
         android:layout_marginStart="293dp"
-        android:background="#236562"
+        android:background="#0000CD"
         android:text="Monto"
         android:textColor="#FFFFFF" />
 </RelativeLayout>

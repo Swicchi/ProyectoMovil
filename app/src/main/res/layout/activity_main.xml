@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/backg"
     tools:context="com.example.remigio.proyectofinal.MainActivity">
 
     <TextView
@@ -12,10 +13,11 @@
         android:layout_height="165dp"
         android:gravity="center"
         android:text="@string/content"
-        android:textColor="@android:color/background_dark"
+        android:textColor="#fff"
         android:textIsSelectable="false"
         android:textSize="25dp"
         android:textStyle="bold"
+        android:background="#422"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -30,6 +32,8 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:text="@string/scan_btn"
+        android:textColor="#fff"
+        android:background="#1A2A53"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
